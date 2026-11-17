@@ -1,0 +1,51 @@
+# 前端：七个 Vue 工程构建 → nginx 静态托管 + /api 反代
+FROM node:20-bookworm-slim AS build
+
+WORKDIR /src
+COPY package.json ./
+COPY shared-ui/package.json shared-ui/
+COPY vue-frontend/package.json vue-frontend/
+COPY vue-settings-project/package.json vue-settings-project/
+COPY vue-settings-org/package.json vue-settings-org/
+COPY vue-settings-user/package.json vue-settings-user/
+COPY vue-modeling/package.json vue-modeling/
+COPY vue-knowledge/package.json vue-knowledge/
+COPY vue-api/package.json vue-api/
+
+RUN npm install --no-audit --no-fund
+
+COPY shared-ui shared-ui
+COPY vue-frontend vue-frontend
+COPY vue-settings-project vue-settings-project
+COPY vue-settings-org vue-settings-org
+COPY vue-settings-user vue-settings-user
+COPY vue-modeling vue-modeling
+COPY vue-knowledge vue-knowledge
+COPY vue-api vue-api
+
+# 后端地址留空 = 同源，由 nginx 反代 /api
+ENV VITE_API_BASE=""
+
+RUN npm run build -w vue-frontend \
+ && npm run build -w vue-settings-project \
+ && npm run build -w vue-settings-org \
+ && npm run build -w vue-settings-user \
+ && npm run build -w vue-modeling \
+ && npm run build -w vue-knowledge \
+ && npm run build -w vue-api
+
+FROM nginx:1.27-alpine
+
+RUN rm -f /etc/nginx/conf.d/default.conf
+COPY docker/nginx.conf /etc/nginx/conf.d/dataask.conf
+
+# 每个工程按 base 前缀落位：/home/index.html 等
+COPY --from=build /src/vue-frontend/dist /usr/share/nginx/html/home
+COPY --from=build /src/vue-modeling/dist /usr/share/nginx/html/modeling
+COPY --from=build /src/vue-knowledge/dist /usr/share/nginx/html/knowledge
+COPY --from=build /src/vue-api/dist /usr/share/nginx/html/api-management
+COPY --from=build /src/vue-settings-project/dist /usr/share/nginx/html/settings/project
+COPY --from=build /src/vue-settings-org/dist /usr/share/nginx/html/settings/organization
+COPY --from=build /src/vue-settings-user/dist /usr/share/nginx/html/settings
+
+EXPOSE 80

@@ -1,0 +1,17 @@
+{
+  "name": "dataask-workspace",
+  "private": true,
+  "workspaces": [
+    "shared-ui",
+    "vue-frontend",
+    "vue-settings-project",
+    "vue-settings-org",
+    "vue-settings-user",
+    "vue-modeling",
+    "vue-knowledge",
+    "vue-api"
+  ],
+  "devDependencies": {
+    "http-proxy": "^1.18.1"
+  }
+}
