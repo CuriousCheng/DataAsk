@@ -16,7 +16,7 @@ logs/
 config/
 work/
 docker/jdk/
-trino-etc/
+/trino-etc/
 
 # 打包产物
 *.tar.gz
